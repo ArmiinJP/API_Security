@@ -9,11 +9,13 @@ services:
     redis:
         image: 'redis:latest'
         container_name: redis_proje_api
-        command: redis-server --requirepass "9090"
+        command: redis-server --save 20 1 --loglevel warning --requirepass 
         ports:
         - '6379:6379'
         networks:
         - mynetwork
+    	volumes: 
+      	- ./Logs/redis:/data
   
     postgres:
         image: postgres:12.0-alpine
@@ -46,6 +48,7 @@ services:
         volumes:
             - /etc/nginx/ssl/localhost.crt:/etc/x509/https/tls.crt
             - /etc/nginx/ssl/localhost.key:/etc/x509/https/tls.key
+            - ./Logs/keycloak:/opt/jboss/keycloak/standalone/log
         depends_on:
             - postgres
         networks:
@@ -56,13 +59,31 @@ services:
         container_name: nginx_rp_proje_api
         networks:
             - mynetwork    
+        depends_on:
+            - redis            
+        volumes:
+            - ./nginx_rp/:/usr/local/openresty/nginx/conf/
+            - ./Logs/relying_party:/var/log/nginx              
         ports:
             - '1443:1443'
 
     gateway:
         image: nginx_gateway:latest
         container_name: nginx_gateway_proje_api
+        volumes:
+            - ./nginx_gateway/:/usr/local/openresty/nginx/conf/
+            - ./Logs/gateway:/var/log/nginx  
+        depends_on:
+            - redis                  
         networks:
             - mynetwork
         ports:
             - '443:443'            
+            
+    example_js:
+      image: example_nodejs:latest
+      container_name: example_nodejs_proje_api
+      networks:
+            - mynetwork
+      ports:
+            - '7777:7777'            

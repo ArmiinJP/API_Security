@@ -2,7 +2,7 @@ FROM openresty/openresty:alpine-fat
 
 RUN mkdir /var/log/nginx
 RUN mv /usr/local/openresty/nginx/conf/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf.default
-COPY . /usr/local/openresty/nginx/conf
+#COPY . /usr/local/openresty/nginx/conf
 RUN apk add openssl-dev
 RUN apk add git
 RUN apk add gcc
