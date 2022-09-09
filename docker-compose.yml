@@ -9,19 +9,20 @@ services:
     redis:
         image: 'redis:latest'
         container_name: redis_proje_api
-        command: redis-server --save 20 1 --loglevel warning --requirepass 
+        command: redis-server --save 20 1 --loglevel warning --requirepass "9090"
         ports:
-        - '6379:6379'
+            - '6379:6379'
         networks:
-        - mynetwork
-    	volumes: 
-      	- ./Logs/redis:/data
+            - mynetwork
+        volumes:
+            - ./Logs/redis:/data
   
     postgres:
         image: postgres:12.0-alpine
         container_name: postgres_proje_api
         volumes:
             - ./postgres_data:/var/lib/postgresql/data
+        command: ["postgres", "-c", "log_statement=all"]            
         environment:
             POSTGRES_DB: keycloak
             POSTGRES_USER: keycloak
@@ -67,6 +68,18 @@ services:
         ports:
             - '1443:1443'
 
+    app:
+        image: nginx:latest
+        container_name: nginx_app_proje_api
+        networks:
+            - mynetwork	    
+        volumes:
+            - ./nginx_app/config/:/etc/nginx/
+            - ./Logs/app:/var/log/nginx              
+        command: [nginx-debug, '-g', 'daemon off;']
+        ports:
+            - '8080:80'
+
     gateway:
         image: nginx_gateway:latest
         container_name: nginx_gateway_proje_api
@@ -74,16 +87,17 @@ services:
             - ./nginx_gateway/:/usr/local/openresty/nginx/conf/
             - ./Logs/gateway:/var/log/nginx  
         depends_on:
-            - redis                  
+            - redis  
+            - app                
         networks:
             - mynetwork
         ports:
             - '443:443'            
-            
+         
     example_js:
       image: example_nodejs:latest
       container_name: example_nodejs_proje_api
       networks:
             - mynetwork
       ports:
-            - '7777:7777'            
+            - '7777:7777'

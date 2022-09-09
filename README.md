@@ -35,9 +35,7 @@ sudo docker exec -it NAME_proje_api bash
 
 configure nginx service(rp, gateway, app) and reloading when running:
 /usr/local/openresty/nginx/sbin/nginx -g "daemon off;" -s reload
-
+nginx -g "daemon off;" -s reload
 
 create modules with dockerfile using below command:
 sudo docker build -t NAME:latest .
-
-

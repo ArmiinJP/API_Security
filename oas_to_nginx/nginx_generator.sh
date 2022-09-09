@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# oas2nginx.sh (c) NGINX, Inc. [v0.5 13-Jan-2020] Liam Crilly <liam.crilly@nginx.com>
+# nginx_generator.sh
 #
-# Converts OpenAPI/Swagger spec into nginx.conf snippet (server context) as per
-#  https://www.nginx.com/blog/deploying-nginx-plus-as-an-api-gateway-part-1/
+# Converts OpenAPI(OAS) into nginx.conf 
 # Requires shyaml for YAML processing: https://github.com/0k/shyaml
 
 # Defaults
 #
 BASEPATH=""
 PREFIX_PATH=""
-UPSTREAM="my_backend"
+UPSTREAM=$BASEPATH
+PROTOCOL="http"
 
 if [ $# -lt 1 ]; then
     echo "USAGE: ${0##*/} [options] oas_spec.yaml"
@@ -18,7 +18,8 @@ if [ $# -lt 1 ]; then
     echo "       Options:"
     echo "       -b | --basepath <basePath>       # Override OAS basePath / servers path"
     echo "       -p | --prefix <prefix path>      # Apply further prefix to basePath"
-    echo "       -u | --upstream <upstream name>  # Specify upstream group (default: $UPSTREAM)"
+    echo "       -u | --upstream <upstream name>  # Specify upstream group (default: Name server)"
+    echo "       -s | --ssl <http/https>  # Specify https or http (default: $PROTOCOL)"    
     exit 1
 fi
 
@@ -40,6 +41,10 @@ while [ $# -gt 1 ]; do
             ;;
         "-u" | "--upstream")
             UPSTREAM=$2
+            shift; shift
+            ;;
+        "-s" | "--ssl")
+            PROTOCOL=$2
             shift; shift
             ;;
          *)
@@ -73,7 +78,9 @@ if [ "`echo $BASEPATH | grep -c http`" == "1" ]; then
     echo "${0##*/}: INFO: Stripping scheme and hostname from basepath URL" > /dev/stderr
     BASEPATH=/`echo $BASEPATH | cut -f4- -d/`
 fi
-echo "${0##*/}: INFO: Using basePath $BASEPATH"
+#echo "${0##*/}: INFO: Using basePath $BASEPATH"
+
+
 
 if [ "$PREFIX_PATH" != "" ]; then
     echo "# Strip prefix"
@@ -84,8 +91,9 @@ fi
 echo "location $BASEPATH/ {" | sed -e 's_//_/_g'
 echo "    # Policy section here"
 echo "    #"
-echo "    error_page 403 = @405;"
-echo ""
+echo "	auth_request /_oauth2_token_introspection;"
+echo "    error_page 404 = @400;"
+echo ""	      
 
 for SWAGGER_PATH in `shyaml keys paths < $1`; do
     # Convert path templates to regular expressions
@@ -105,7 +113,7 @@ for SWAGGER_PATH in `shyaml keys paths < $1`; do
         echo "        limit_except $METHODS{ deny all; }"
     fi
 
-    echo "        proxy_pass http://$UPSTREAM;"
+    echo "        proxy_pass $PROTOCOL://$UPSTREAM\$uri;"
     echo "    }"
 done
 

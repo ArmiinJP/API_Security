@@ -6,7 +6,7 @@ function introspectAccessToken(r) {
                 if (response.active == true) {
                     r.return(204); // Token is valid, return success code
                 } else {
-                    r.return(403); // Token is invalid, return forbidden code
+                    r.return(401); // Token is invalid, return forbidden code
                 }
             } else {
                 r.return(401); // Unexpected response, return 'auth required'

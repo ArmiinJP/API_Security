@@ -1,0 +1,85 @@
+{
+  "allowRemoteResourceManagement": true,
+  "policyEnforcementMode": "ENFORCING",
+  "resources": [
+    {
+      "name": "just_get",
+      "ownerManagedAccess": true,
+      "displayName": "jGET",
+      "attributes": {},
+      "_id": "5d2ce9f0-8ba4-464e-b3db-528ecb11f138",
+      "uris": [
+        "/get"
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "321dd63e-6b7a-4054-b6cc-0bef0606415c",
+      "name": "Default Policy",
+      "description": "A policy that grants access only for users within this realm",
+      "type": "js",
+      "logic": "POSITIVE",
+      "decisionStrategy": "AFFIRMATIVE",
+      "config": {
+        "code": "// by default, grants any permission associated with this policy\n$evaluation.grant();\n"
+      }
+    },
+    {
+      "id": "37ab2c5f-609f-4075-8c22-6276833c8a3b",
+      "name": "admins_allow_/get",
+      "type": "user",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "users": "[\"simple_admin\"]"
+      }
+    },
+    {
+      "id": "445f0abf-075c-4c91-af60-faed66801b02",
+      "name": "member_not_allow_get",
+      "type": "user",
+      "logic": "NEGATIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "users": "[\"simple_member\"]"
+      }
+    },
+    {
+      "id": "64c5700f-5f45-466b-a7dc-d8ba214840d0",
+      "name": "Default Permission",
+      "description": "A permission that applies to the default resource type",
+      "type": "resource",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "defaultResourceType": "urn:nginx:resources:default",
+        "applyPolicies": "[\"Default Policy\"]"
+      }
+    },
+    {
+      "id": "7dc5954e-c9ff-4da2-abdb-4c4df86b4fd9",
+      "name": "permission_for_get",
+      "type": "resource",
+      "logic": "POSITIVE",
+      "decisionStrategy": "AFFIRMATIVE",
+      "config": {
+        "resources": "[\"just_get\"]",
+        "applyPolicies": "[\"admins_allow_/get\"]"
+      }
+    },
+    {
+      "id": "691b231f-6759-4dc4-ae57-4e17a3174161",
+      "name": "member_not_allow",
+      "type": "resource",
+      "logic": "POSITIVE",
+      "decisionStrategy": "AFFIRMATIVE",
+      "config": {
+        "resources": "[\"just_get\"]",
+        "applyPolicies": "[\"member_not_allow_get\"]"
+      }
+    }
+  ],
+  "scopes": [],
+  "decisionStrategy": "AFFIRMATIVE"
+}
